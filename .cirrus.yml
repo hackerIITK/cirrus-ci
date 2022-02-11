@@ -34,7 +34,7 @@ task:
     - runuser -l aryan -c "echo -e '\n\nTesting ssh key' && ssh -T git@github.com -o 'StrictHostKeyChecking no' || true"
     - runuser -l aryan -c "df -h . && mkdir lineage;cd lineage;repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --depth=1 && git clone https://github.com/aryankaran/local_manifests -b LineageOS --depth=1 .repo/local_manifests && time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || repo sync -j1 || repo sync"
     - echo -e "\n\n\n\n\n\n\n\n------      Doing actual Build     --------\n\n\n\n\n\n\n\n"
-    - runuser -l aryan -c "timeout 80m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_DIR=/home/aryan/ccache && export OUT_DIR=/home/aryan/out && ccache -s && ccache -M 100G && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true"
+    - runuser -l aryan -c "timeout 80m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_DIR=/home/aryan/ccache && export OUT_DIR=/home/aryan/out && ccache -s && ccache -M 100G && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && m -j8' || true"
 
   Push_script:
     - cd /home/aryan;time tar --use-compress-program=lz4 -cf "ccache-$(date | sed 's-:-.-g').tlz4" ccache& time tar --use-compress-program=lz4 -cf "out-$(date | sed 's-:-.-g').tlz4" out && transfer wet c*tlz4 || true ls -lhA
