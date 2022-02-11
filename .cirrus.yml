@@ -12,11 +12,10 @@ task:
   container:
     image: ubuntu:20.04
     cpu: 8
-    memory: 24GB
+    memory: 30GB
 
   Setup_script:
     - apt update &>/dev/null;echo -e "\n\n-----        Installing Packages       ------\n\n";time apt install $packages -y &>/dev/null;cd /usr/local/bin && bash -c "$(curl -L git.io/file-transfer)";cd - || exit
-    - command -v transfer || true && transfer
     - lz4_install() { git clone https://github.com/lz4/lz4 --depth=1;cd lz4;PREFIX=/usr;make install;}
     - lz4_install
     - ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime && date
@@ -27,16 +26,20 @@ task:
     - time bash -c "$(curl -L https://raw.githubusercontent.com/aryankaran/build-env-setup/main/envsetup.sh  2>/dev/null)" &>/dev/null
     - echo -e "\n\n----   Adding user aryan ----\n\n"
     - adduser --gecos "" --disabled-password aryan;passwd -d aryan;usermod -aG sudo aryan;cp ~/.gitconfig /home/aryan;cp ~/.ssh /home/aryan -R;chown -R aryan:aryan /home/aryan/.gitconfig /home/aryan/.ssh
+    - echo -e "\n\n\n\n\n\n\n\n----   Get old files  ---\n\n\n\n\n\n\n\n"
+    - ccache="$(cat $CIRRUS_WORKING_DIR/ccache)";ccache="$(echo $ccache | sed 's- -\\ -g')";echo $ccache && out="$(cat $CIRRUS_WORKING_DIR/out)";out="$(echo $out | sed 's- -\\ -g')";echo $out
+    - cd /home/aryan;scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$ccache" .& scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$out" .;ls -lhA;sleep 1
+    - for lz in *lz4;do lz4 -dc "$lz" | tar x && rm "$lz" && ls -lh;done && cd - || exit
     - echo -e "\n\n\n\n\n\n\n\n----   Time to do some source code download  ---\n\n\n\n\n\n\n\n"
     - runuser -l aryan -c "echo -e '\n\nTesting ssh key' && ssh -T git@github.com -o 'StrictHostKeyChecking no' || true"
     - runuser -l aryan -c "df -h . && mkdir lineage;cd lineage;repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --depth=1 && git clone https://github.com/aryankaran/local_manifests -b LineageOS --depth=1 .repo/local_manifests && time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || repo sync -j1 || repo sync"
     - echo -e "\n\n\n\n\n\n\n\n------      Doing actual Build     --------\n\n\n\n\n\n\n\n"
-    - runuser -l aryan -c "timeout 8m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_DIR=/home/aryan/ccache && export OUT_DIR=/home/aryan/out && ccache -s && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true"
+    - runuser -l aryan -c "timeout 80m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_DIR=/home/aryan/ccache && export OUT_DIR=/home/aryan/out && ccache -s && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true"
 
   Push_script:
-    - cd /home/aryan; pwd && time tar --use-compress-program=lz4 -cf "ccache-$(date | sed 's-:-.-g').tlz4" ccache& time tar --use-compress-program=lz4 -cf "out-$(date | sed 's-:-.-g').tlz4" out;transfer wet *lz4 || true; ls -lhA
+    - cd /home/aryan;time tar --use-compress-program=lz4 -cf "ccache-$(date | sed 's-:-.-g').tlz4" ccache& time tar --use-compress-program=lz4 -cf "out-$(date | sed 's-:-.-g').tlz4" out && transfer wet *tlz4 || true ls -lhA
+    - echo ccache*lz4 > $CIRRUS_WORKING_DIR/ccache && echo out*lz4 > $CIRRUS_WORKING_DIR/out && ls -lh *tlz4
     - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf *tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds
 
   Post_script:
-    - cd $CIRRUS_WORKING_DIR && echo "$(date)" > files && git add files && git commit -m "$(date)" && git remote add me git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git push me
-    
+    - cd $CIRRUS_WORKING_DIR && echo "$(date)" > files && git add files ccache out && git commit -m "$(date)" && git remote add me git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git push me
