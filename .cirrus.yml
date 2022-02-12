@@ -12,7 +12,7 @@ task:
   container:
     image: ubuntu:20.04
     cpu: 8
-    memory: 32GB
+    memory: 24GB
 
   Setup_script:
     - apt update &>/dev/null;echo -e "\n\n-----        Installing Packages       ------\n\n";time apt install $packages -y &>/dev/null;cd /usr/local/bin && bash -c "$(curl -L git.io/file-transfer)";cd - || exit
