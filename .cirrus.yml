@@ -37,9 +37,11 @@ task:
     - runuser -l aryan -c "timeout 80m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_EXEC=$(which ccache) && export CCACHE_DIR=/home/aryan/ccache && export OUT_DIR=/home/aryan/out && ccache -s && ccache -M 100G && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true"
 
   Push_script:
-    - cd /home/aryan;time tar --use-compress-program=lz4 -cf "ccache-$(date | sed 's-:-.-g').tlz4" ccache& time tar --use-compress-program=lz4 -cf "out-$(date | sed 's-:-.-g').tlz4" out && transfer wet c*tlz4 || true ls -lhA
+    - export CCACHE_DIR=/home/aryan/ccache && ccache -s
+    - cd /home/aryan;time tar --use-compress-program=lz4 -cf "ccache-$(date | sed 's-:-.-g').tlz4" ccache& time tar --use-compress-program=lz4 -cf "out-$(date | sed 's-:-.-g').tlz4" out && ls -lhA
     - ls -lh *tlz4
     - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf *tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds
+    - [ -f out/target/product/*/*zip ] && transfer wet out/target/product/*/*zip
 
   Post_script:
     - cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cd /home/aryan && echo ccache*lz4 > $CIRRUS_WORKING_DIR/ccache && echo out*lz4 > $CIRRUS_WORKING_DIR/out && cd $CIRRUS_WORKING_DIR && echo "$(date)" > files && git add files ccache out && git commit -m "$(date)" && git push
