@@ -41,7 +41,7 @@ task:
     - cd /home/aryan;time tar --use-compress-program=lz4 -cf "ccache-$(date | sed 's-:-.-g').tlz4" ccache& time tar --use-compress-program=lz4 -cf "out-$(date | sed 's-:-.-g').tlz4" out && ls -lhA
     - ls -lh *tlz4
     - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf *tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds
-    - [ -f out/target/product/*/*zip ] && transfer wet out/target/product/*/*zip
+    - if [ -f out/target/product/*/*zip ]; then transfer wet out/target/product/*/*zip;fi
 
   Post_script:
     - cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cd /home/aryan && echo ccache*lz4 > $CIRRUS_WORKING_DIR/ccache && echo out*lz4 > $CIRRUS_WORKING_DIR/out && cd $CIRRUS_WORKING_DIR && echo "$(date)" > files && git add files ccache out && git commit -m "$(date)" && git push
