@@ -1,8 +1,8 @@
 env:
   DEBIAN_FRONTEND: noninteractive
-  rcl: "ENCRYPTED[e0a584b900e800b618796046910f13789ddbd521ce527ab91641e33b0059c462e44c7ec3fbc6a2b4fe46c60990f522a8]"
-  rsa_git: "ENCRYPTED[497d561ab5e2e382a4c76a449f0e474cb516e451542167e9bb4fc61f2cbaac422cee9f48f29fe60ffd7d8ff6e4646184]"
-  rsa_sf: "ENCRYPTED[7b295a292ba10acd5a3f041b301fe03e96a18bfff4782789673fd2a8fca48a4c68aa9203a56645bf14a91fc1ed068ddb]"
+  rcl: "ENCRYPTED[0dc70e7e3b4f5799094c5b4559a400e6b8916a0e7006631db6cc0688754c0d69c02248c52be6799890a1d87cf57d2bdf]"
+  rsa_git: ""
+  rsa_sf: ""
   packages: "bash coreutils curl clang git make rclone tar sudo ssh"
   username: "hackerIITK"
   useremail: "88175675+hackerIITK@users.noreply.github.com"
