@@ -1,10 +1,11 @@
 env:
   DEBIAN_FRONTEND: noninteractive
-  rsa_git: "ENCRYPTED[2f4b207a366af5bf11db03b85ced67aff3631ba582304219c518b0ea9a805dcfb7c75d35793f441977fd28aa2e958fd7]"
-  rsa_sf: "ENCRYPTED[68bc61d584c86e686aaa6b422e6e9bdbbbb1b13d19ce77e89acf9d3a8f52b4689045f60ca42470f409f02a551d6a1950]"
-  packages: "bash coreutils curl clang git make tar sudo ssh"
-  username: "Hacker IITK (aryan)"
-  useremail: "aryaniitk2021@gmail.com"
+  rcl: "ENCRYPTED[e0a584b900e800b618796046910f13789ddbd521ce527ab91641e33b0059c462e44c7ec3fbc6a2b4fe46c60990f522a8]"
+  rsa_git: "ENCRYPTED[497d561ab5e2e382a4c76a449f0e474cb516e451542167e9bb4fc61f2cbaac422cee9f48f29fe60ffd7d8ff6e4646184]"
+  rsa_sf: "ENCRYPTED[7b295a292ba10acd5a3f041b301fe03e96a18bfff4782789673fd2a8fca48a4c68aa9203a56645bf14a91fc1ed068ddb]"
+  packages: "bash coreutils curl clang git make rclone tar sudo ssh"
+  username: "hackerIITK"
+  useremail: "88175675+hackerIITK@users.noreply.github.com"
 
 task:
   name: Buildup LineageOS
@@ -12,36 +13,61 @@ task:
   container:
     image: ubuntu:20.04
     cpu: 8
-    memory: 24GB
+    memory: 30GB
 
   Setup_script:
+    - mkdir -p ~/.config/rclone && echo "$rcl" > ~/.config/rclone/rclone.conf
     - apt update &>/dev/null;echo -e "\n\n-----        Installing Packages       ------\n\n";time apt install $packages -y &>/dev/null;cd /usr/local/bin && bash -c "$(curl -L git.io/file-transfer)";cd - || exit
-    - lz4_install() { git clone https://github.com/lz4/lz4 --depth=1;cd lz4;PREFIX=/usr;make install;}
+    - lz4_install() { git clone https://github.com/lz4/lz4 --depth=1;cd lz4;PREFIX=/usr;make install;cd - || exit;rm -rf $OLDPWD;}
     - lz4_install
     - ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime && date
+    - apt-get install -y tzdata
+    - dpkg-reconfigure --frontend noninteractive tzdata
     - git config --global user.name "$username";git config --global user.email "$useremail";git config --global color.ui true
     - mkdir ~/.ssh &>/dev/null || true;echo "$rsa_git" > ~/.ssh/id_rsa;echo "$rsa_sf" > ~/.ssh/id_sf && chmod 600 ~/.ssh/id_*
-    - echo -e "\n\nTesting ssh key" && ssh -T git@github.com -o 'StrictHostKeyChecking no' || true
-    - echo -e "\n\n\n\n------      Setting Up Build Environment     ------\n\n\n\n"
-    - time bash -c "$(curl -L https://raw.githubusercontent.com/aryankaran/build-env-setup/main/envsetup.sh  2>/dev/null)" &>/dev/null
+    - echo -e "\n\nTesting ssh key" && ssh -T git@github.com -o 'StrictHostKeyChecking no' -i ~/.ssh/id_rsa || true
+    - echo -e "\n\n------      Setting Up Build Environment     ------\n\n\n\n"
+    - time bash -c "$(curl -L https://raw.githubusercontent.com/aryankaran/build-env-setup/main/envsetup.sh  2>/dev/null)" # &>/dev/null
     - echo -e "\n\n----   Adding user aryan ----\n\n"
     - adduser --gecos "" --disabled-password aryan;passwd -d aryan;usermod -aG sudo aryan;cp ~/.gitconfig /home/aryan;cp ~/.ssh /home/aryan -R;chown -R aryan:aryan /home/aryan/.gitconfig /home/aryan/.ssh
-    - echo -e "\n\n\n\n\n\n\n\n----   Get old files  ---\n\n\n\n\n\n\n\n"
+
+  ccache Download_background_script:
+    - echo -e "\n\n----   Getting older build files  ---\n\n\n\n\n\n\n\n"
     - ccache="$(cat $CIRRUS_WORKING_DIR/ccache)";ccache="$(echo $ccache | sed 's- -\\ -g')";echo $ccache && out="$(cat $CIRRUS_WORKING_DIR/out)";out="$(echo $out | sed 's- -\\ -g')";echo $out
-    - cd /home/aryan;scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$ccache" .& scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$out" .;ls -lhA;sleep 1
-    - for lz in *lz4;do lz4 -dc "$lz" | tar x && rm "$lz" && ls -lh;done && cd - || exit
-    - echo -e "\n\n\n\n\n\n\n\n----   Time to do some source code download  ---\n\n\n\n\n\n\n\n"
-    - runuser -l aryan -c "echo -e '\n\nTesting ssh key' && ssh -T git@github.com -o 'StrictHostKeyChecking no' || true"
+#    - timeout 20s ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net create || true
+#    - cd /home/aryan;time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$ccache" .& time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$out" .
+#    - cd /home/aryan;time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$ccache" | lz4 -dc | tar x& time rclone copy cirrus:/vince/"$out" . || true
+#    - cd /home/aryan;time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$ccache" | lz4 -dc | tar x& time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$out" | lz4 -dc | tar x;ls -lh
+    - cd /home/aryan;time rclone copy cirrus:/vince/"$ccache" .&time rclone copy cirrus:/vince/"$out" .
+    - for lz in *tlz4;do time lz4 -dc "$lz" | tar x && rm "$lz" && ls -lh;done && cd - || exit
+
+  Repo sync_script:
+    - cd /home/aryan;echo -e "\n\n----   Time to do some source code download  ---\n\n\n\n\n\n\n\n"
+    - runuser -l aryan -c "echo -e '\n\nTesting ssh key' && ssh -T git@github.com -o 'StrictHostKeyChecking no' -i ~/.ssh/id_rsa || true"
     - runuser -l aryan -c "df -h . && mkdir lineage;cd lineage;repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --depth=1 && git clone https://github.com/aryankaran/local_manifests -b LineageOS --depth=1 .repo/local_manifests && time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || repo sync -j1 || repo sync"
-    - echo -e "\n\n\n\n\n\n\n\n------      Doing actual Build     --------\n\n\n\n\n\n\n\n"
-    - runuser -l aryan -c "timeout 80m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_EXEC=$(which ccache) && export CCACHE_DIR=/home/aryan/ccache && export OUT_DIR=/home/aryan/out && ccache -s && ccache -M 100G && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true"
 
-  Push_script:
+  ccache stats before build_script:
     - export CCACHE_DIR=/home/aryan/ccache && ccache -s
-    - cd /home/aryan;time tar --use-compress-program=lz4 -cf "ccache-$(date | sed 's-:-.-g').tlz4" ccache& time tar --use-compress-program=lz4 -cf "out-$(date | sed 's-:-.-g').tlz4" out && ls -lhA
-    - ls -lh *tlz4
-    - scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf *tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds
-    - if [ -f out/target/product/*/*zip ]; then transfer wet out/target/product/*/*zip;fi
 
-  Post_script:
-    - cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cd /home/aryan && echo ccache*lz4 > $CIRRUS_WORKING_DIR/ccache && echo out*lz4 > $CIRRUS_WORKING_DIR/out && cd $CIRRUS_WORKING_DIR && echo "$(date)" > files && git add files ccache out && git commit -m "$(date)" && git push
+  Build_script:
+    - echo -e "---------           Doing actual Build          --------\n\n\n\n\n\n\n\n"
+    - runuser -l aryan -c "timeout 90m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_EXEC=$(which ccache) && export CCACHE_DIR=/home/aryan/ccache && ccache -o compression=true && export OUT_DIR=/home/aryan/out && ccache -M 50G && ccache -s && ccache -z && ccache -s && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true" || true
+    - export CCACHE_DIR=/home/aryan/ccache && ccache -s
+
+  ccache stats after build_script:
+    - export CCACHE_DIR=/home/aryan/ccache && ccache -s
+
+  Push Back_script:
+    - cd /home/aryan;ccache="ccache-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4";out="out-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4"
+    - echo "$ccache" > /tmp/ccache && echo "$out" > /tmp/out
+#    - timeout 20s ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net create || true
+    - pwd;time tar --use-compress-program=lz4 -cf "$ccache" ccache& time tar --use-compress-program=lz4 -cf "$out" out
+#    - pwd;time tar --use-compress-program=lz4 -c ccache | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$ccache"& time tar --use-compress-program=lz4 -c out | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$out"
+#    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time rclone copy out*tlz4 cirrus:vince
+#    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf out*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds;ls -lh
+    - time rclone copy "$ccache" cirrus:vince -P;time rclone copy "$out" cirrus:vince -P&
+    - pwd && [ -f out/target/product/*/*zip ] && transfer wet out/target/product/*/*zip || true
+
+  Post Build_script:
+    - pwd && cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cp /tmp/ccache ccache && cp /tmp/out out && echo "$(date)" > time && git add . && git commit -m "$(date)" && git push
+    - rm -rf ~/.ssh /home/aryan/.ssh ~/.config/rclone || true && ls -lhA ~ /home/aryan
