@@ -59,7 +59,7 @@ task:
 
   Push Back_script:
     - cd /home/aryan;ccache="ccache-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4";out="out-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4"
-    - echo "$ccache" > /tmp/ccache && echo "$out" > /tmp/out
+    - echo "$ccache" > /tmp/ccache && echo "$out" > /tmp/out;ls -lh
 #    - timeout 20s ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net create || true
     - pwd;time tar --use-compress-program=lz4 -cf "$ccache" ccache& time tar --use-compress-program=lz4 -cf "$out" out
 #    - pwd;time tar --use-compress-program=lz4 -c ccache | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$ccache"& time tar --use-compress-program=lz4 -c out | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$out"
