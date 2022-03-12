@@ -31,48 +31,43 @@ task:
     - echo -e "\n\n----   Adding user aryan ----\n\n"
     - adduser --gecos "" --disabled-password aryan;passwd -d aryan;usermod -aG sudo aryan;cp ~/.gitconfig /home/aryan;cp ~/.ssh /home/aryan -R;chown -R aryan:aryan /home/aryan/.gitconfig /home/aryan/.ssh
 
-  Prrevious build Download_script:
+  ccache Download_background_script:
     - echo -e "\n\n----   Getting older build files  ---\n\n\n\n\n\n\n\n"
-#    - ccache="$(echo $ccache | sed 's- -\\ -g')"
-    - ccache="$(cat $CIRRUS_WORKING_DIR/ccache)" && out="$(cat $CIRRUS_WORKING_DIR/out)" && repo="$(cat $CIRRUS_WORKING_DIR/repo)" && echo $out $ccache $repo
+    - ccache="$(cat $CIRRUS_WORKING_DIR/ccache)";ccache="$(echo $ccache | sed 's- -\\ -g')";echo $ccache && out="$(cat $CIRRUS_WORKING_DIR/out)";out="$(echo $out | sed 's- -\\ -g')";echo $out
 #    - timeout 20s ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net create || true
 #    - cd /home/aryan;time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$ccache" .& time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$out" .
 #    - cd /home/aryan;time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$ccache" | lz4 -dc | tar x& time rclone copy cirrus:/vince/"$out" . || true
 #    - cd /home/aryan;time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$ccache" | lz4 -dc | tar x& time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$out" | lz4 -dc | tar x;ls -lh
-    - cd /home/aryan;time rclone copy cirrus:/monet/"$ccache" .& ccache_pid=$!; time rclone copy cirrus:/monet/"$out" .& out_pid=$!; time rclone copy cirrus:/surya/"$repo" .; wait $ccache_pid; wait $out_pid;echo -e "\n\nFiles downloaded succesfullly"
-#    - for lz in *tlz4;do time lz4 -dc "$lz" | tar x --preserve-permissions && rm "$lz" && ls -lh && date;done
-    - ls -lh
-    - dec() { time lz4 -dc "$${1}" | tar x --preserve-permissions& $1-pid=$!; echo $1-pid;}
-    - for d in out ccache repo;do dec $d;done; for d in out ccache repo;do wait $d-pid;echo $d decompressed succesfully;done
-    - echo "Fixing permissions" && chown -R aryan:aryan * && ls -lh && cd - || exit
+    - cd /home/aryan;time rclone copy cirrus:/monet/"$ccache" .&time rclone copy cirrus:/monet/"$out" .
+    - for lz in *tlz4;do time lz4 -dc "$lz" | tar x && rm "$lz" && ls -lh;done && cd - || exit
 
-##  Repo sync_script:
-##    - cd /home/aryan;echo -e "\n\n----   Time to do some source code download  ---\n\n\n\n\n\n\n\n"
-###    - runuser -l aryan -c "echo -e '\n\nTesting ssh key as user aryan' && ssh -T git@github.com -o 'StrictHostKeyChecking no' -i ~/.ssh/id_rsa || true"
-##    - runuser -l aryan -c "df -h . && mkdir lineage;cd lineage;repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --depth=1 -g default,-mips,-darwin,-notdefault && git clone https://github.com/aryankaran/local_manifests -b LineageOS --depth=1 .repo/local_manifests && time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || repo sync -j1 || repo sync"
-##
-  ccache stats of Previous build_script:
+  Repo sync_script:
+    - cd /home/aryan;echo -e "\n\n----   Time to do some source code download  ---\n\n\n\n\n\n\n\n"
+    - runuser -l aryan -c "echo -e '\n\nTesting ssh key' && ssh -T git@github.com -o 'StrictHostKeyChecking no' -i ~/.ssh/id_rsa || true"
+    - runuser -l aryan -c "df -h . && mkdir lineage;cd lineage;repo init -u https://github.com/LineageOS/android.git -b lineage-18.1 --depth=1 && git clone https://github.com/aryankaran/local_manifests -b LineageOS --depth=1 .repo/local_manifests && time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || time repo sync -c -j8 --force-sync --no-clone-bundle --no-tags || repo sync -j1 || repo sync"
+
+  ccache stats before build_script:
     - export CCACHE_DIR=/home/aryan/ccache && ccache -s
 
   Build_script:
     - echo -e "---------           Doing actual Build          --------\n\n\n\n\n\n\n\n"
-    - runuser -l aryan -c "timeout 66m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_EXEC=$(which ccache) && export CCACHE_DIR=/home/aryan/ccache && ccache -o compression=true && export OUT_DIR=/home/aryan/out && ccache -M 50G && ccache -z && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true" || true
+    - runuser -l aryan -c "timeout 70m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_EXEC=$(which ccache) && export CCACHE_DIR=/home/aryan/ccache && ccache -o compression=true && export OUT_DIR=/home/aryan/out && ccache -M 50G && ccache -s && ccache -z && ccache -s && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true" || true
     - export CCACHE_DIR=/home/aryan/ccache && ccache -s
 
   ccache stats after build_script:
     - export CCACHE_DIR=/home/aryan/ccache && ccache -s
 
   Push Back_script:
-    - cd /home/aryan;ccache="ccache-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4";out="out-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4";repo="repo-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4"
-    - echo "$ccache" > /tmp/ccache && echo "$out" > /tmp/out && echo "$repo" > /tmp/repo
+    - cd /home/aryan;ccache="ccache-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4";out="out-$(date | sed 's-:-.-g' | sed 's- -_-g').tlz4"
+    - echo "$ccache" > /tmp/ccache && echo "$out" > /tmp/out;ls -lh
 #    - timeout 20s ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net create || true
-    - pwd;time tar --use-compress-program=lz4 -cf "$ccache" ccache& ccache_pid=$!; time tar --use-compress-program=lz4 -cf "$out" out& out_pid=$!; time tar --use-compress-program=lz4 -cf "$repo" lineage;wait $ccache_pid; wait $out_pid; echo -e "\n\nCompression done\n\n\n\n"
+    - pwd;time tar --use-compress-program=lz4 -cf "$ccache" ccache& time tar --use-compress-program=lz4 -cf "$out" out
 #    - pwd;time tar --use-compress-program=lz4 -c ccache | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$ccache"& time tar --use-compress-program=lz4 -c out | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$out"
 #    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time rclone copy out*tlz4 cirrus:vince
 #    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf out*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds;ls -lh
-    - time rclone copy "$ccache" cirrus:monet& ccache_pid=$!; time rclone copy "$out" cirrus:monet& out_pid=$!; time rclone copy "$repo" cirrus:surya; wait $ccache_pid; wait $out_pid; echo -e "\nUploading Files done wohooooo"
+    - time rclone copy "$ccache" cirrus:monet& time rclone copy "$out" cirrus:monet -P
     - pwd && [ -f out/target/product/*/*zip ] && transfer wet out/target/product/*/*zip || true
 
   Post Build_script:
-    - pwd && cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cp /tmp/ccache ccache && cp /tmp/out out && cp /tmp/repo repo && echo "$(date)" > time && git add . && git commit -m "$(date)" && git push
+    - pwd && cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cp /tmp/ccache ccache && cp /tmp/out out && echo "$(date)" > time && git add . && git commit -m "$(date)" && git push
     - rm -rf ~/.ssh /home/aryan/.ssh ~/.config/rclone || true && ls -lhA ~ /home/aryan
