@@ -38,7 +38,7 @@ task:
 #    - cd /home/aryan;time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$ccache" .& time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf aryankaran@frs.sf.net:"/home/users/a/ar/aryankaran/builds/$out" .
 #    - cd /home/aryan;time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$ccache" | lz4 -dc | tar x& time rclone copy cirrus:/vince/"$out" . || true
 #    - cd /home/aryan;time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$ccache" | lz4 -dc | tar x& time ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd if="/home/users/a/ar/aryankaran/builds/$out" | lz4 -dc | tar x;ls -lh
-    - cd /home/aryan;time rclone copy cirrus:/vince/"$ccache" .&time rclone copy cirrus:/vince/"$out" .
+    - cd /home/aryan;time rclone copy cirrus:/monet/"$ccache" .&time rclone copy cirrus:/monet/"$out" .
     - for lz in *tlz4;do time lz4 -dc "$lz" | tar x && rm "$lz" && ls -lh;done && cd - || exit
 
   Repo sync_script:
@@ -65,7 +65,7 @@ task:
 #    - pwd;time tar --use-compress-program=lz4 -c ccache | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$ccache"& time tar --use-compress-program=lz4 -c out | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$out"
 #    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time rclone copy out*tlz4 cirrus:vince
 #    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf out*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds;ls -lh
-    - time rclone copy "$ccache" cirrus:vince -P;time rclone copy "$out" cirrus:vince -P
+    - time rclone copy "$ccache" cirrus:monet;time rclone copy "$out" cirrus:monet -P
     - pwd && [ -f out/target/product/*/*zip ] && transfer wet out/target/product/*/*zip || true
 
   Post Build_script:
