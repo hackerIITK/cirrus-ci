@@ -51,7 +51,7 @@ task:
 
   Build_script:
     - echo -e "---------           Doing actual Build          --------\n\n\n\n\n\n\n\n"
-    - runuser -l aryan -c "timeout 78m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_EXEC=$(which ccache) && export CCACHE_DIR=/home/aryan/ccache && ccache -o compression=true && export OUT_DIR=/home/aryan/out && ccache -M 50G && ccache -s && ccache -z && ccache -s && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true" || true
+    - runuser -l aryan -c "timeout 70m bash -c 'cd ~/lineage;source build/envsetup.sh || . build/envsetup.sh || true && export USE_CCACHE=1 && export CCACHE_EXEC=$(which ccache) && export CCACHE_DIR=/home/aryan/ccache && ccache -o compression=true && export OUT_DIR=/home/aryan/out && ccache -M 50G && ccache -s && ccache -z && ccache -s && export KBUILD_BUILD_USER=aryan && export KBUILD_BUILD_HOST=AryanLappyHP && brunch onclite' || true" || true
     - export CCACHE_DIR=/home/aryan/ccache && ccache -s
 
   ccache stats after build_script:
