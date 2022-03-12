@@ -65,7 +65,7 @@ task:
 #    - pwd;time tar --use-compress-program=lz4 -c ccache | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$ccache"& time tar --use-compress-program=lz4 -c out | ssh -i ~/.ssh/id_sf -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null aryankaran@shell.sf.net dd of="/home/users/a/ar/aryankaran/builds/$out"
 #    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time rclone copy out*tlz4 cirrus:vince
 #    - time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf ccache*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds& time scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/id_sf out*tlz4 aryankaran@frs.sf.net:/home/users/a/ar/aryankaran/builds;ls -lh
-    - time rclone copy "$ccache" cirrus:monet;time rclone copy "$out" cirrus:monet -P
+    - time rclone copy "$ccache" cirrus:monet& time rclone copy "$out" cirrus:monet -P
     - pwd && [ -f out/target/product/*/*zip ] && transfer wet out/target/product/*/*zip || true
 
   Post Build_script:
