@@ -11,7 +11,7 @@ task:
   name: Buildup LineageOS
   timeout_in: 2h
   container:
-    image: ubuntu:20.04
+    image: ubuntu:16.04
     cpu: 8
     memory: 32GB
 
