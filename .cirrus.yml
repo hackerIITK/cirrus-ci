@@ -13,7 +13,7 @@ task:
   container:
     image: ubuntu:20.04
     cpu: 8
-    memory: 30GB
+    memory: 32GB
 
   Setup_script:
     - mkdir -p ~/.config/rclone && echo "$rcl" > ~/.config/rclone/rclone.conf
