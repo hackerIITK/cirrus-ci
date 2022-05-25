@@ -18,4 +18,4 @@ task:
 
   Post Build_script:
     - pwd && cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cp /tmp/ccache ccache && cp /tmp/out out && cp /tmp/repo repo && echo "$(date)" > time && git add . && git commit -m "$(date)" && git push
-    - rm -rf ~/.ssh /home/aryan/.ssh ~/.config/rclone || true && ls -lhA ~ /home/aryan
+    - rm -rf ~/.ssh /home/aryan/.ssh ~/.config/rclone || true && ls -lhA ~ /home/aryan || true
