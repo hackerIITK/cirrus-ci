@@ -1,21 +1,6 @@
-env:
-  DEBIAN_FRONTEND: noninteractive
-  rcl: "ENCRYPTED[0dc70e7e3b4f5799094c5b4559a400e6b8916a0e7006631db6cc0688754c0d69c02248c52be6799890a1d87cf57d2bdf]"
-  rsa_git: "ENCRYPTED[9baa6c3c23b052fa639cfc25b47a7d88b97bd6f0386edc60b7a9125f103f49ab02c63f6bdd09d6e279325a588c89ce54]"
-  rsa_sf: ""
-  packages: "bash coreutils curl clang git make rclone tar sudo ssh"
-  username: "hackerIITK"
-  useremail: "88175675+hackerIITK@users.noreply.github.com"
-
 task:
-  name: Buildup LineageOS
-  timeout_in: 2h
+  name: Test IP
   container:
-    image: ubuntu:20.04
-    cpu: 8
-    memory: 32GB
-
-
-  Post Build_script:
-    - pwd && cd $CIRRUS_WORKING_DIR && git remote set-url origin git@$CIRRUS_REPO_CLONE_HOST:$CIRRUS_REPO_FULL_NAME && git pull && cp /tmp/ccache ccache && cp /tmp/out out && cp /tmp/repo repo && echo "$(date)" > time && git add . && git commit -m "$(date)" && git push
-    - rm -rf ~/.ssh /home/aryan/.ssh ~/.config/rclone || true && ls -lhA ~ /home/aryan || true
+    image: cirrusci/wget:latest
+    use_static_ip: true
+  script: wget -qO- ifconfig.co
